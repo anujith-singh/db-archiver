@@ -15,10 +15,14 @@ mysql_cursor = mysql_connection.cursor(dictionary=True)
 
 
 def create_archive_database(db_name, archive_db_name):
-    mysql_cursor.execute(f'SHOW CREATE DATABASE {db_name}')
-    create_db_query = mysql_cursor.fetchone()['Create Database']
-    create_archive_db_query = re.sub(r'(?s)(CREATE DATABASE )(`.*?)(`)', r'\1IF NOT EXISTS `' + archive_db_name + '`', create_db_query, count=1)
-    mysql_cursor.execute(create_archive_db_query)
+    mysql_cursor.execute(f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{archive_db_name}'")
+    result = mysql_cursor.fetchone()
+
+    if result is None:
+        mysql_cursor.execute(f'SHOW CREATE DATABASE {db_name}')
+        create_db_query = mysql_cursor.fetchone()['Create Database']
+        create_archive_db_query = re.sub(r'(?s)(CREATE DATABASE )(`.*?)(`)', r'\1IF NOT EXISTS `' + archive_db_name + '`', create_db_query, count=1)
+        mysql_cursor.execute(create_archive_db_query)
 
 
 def create_archive_table(db_name, table_name, archive_db_name, archive_table_name):
