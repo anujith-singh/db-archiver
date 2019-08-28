@@ -54,8 +54,8 @@ def drop_archive_table(archive_db_name, archive_table_name):
     mysql_cursor.execute(f'DROP TABLE {archive_table_name}')
 
 
-def get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_append_to_filename, where_clause):
-    column_name = column_to_append_to_filename
+def get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_add_in_s3_filename, where_clause):
+    column_name = column_to_add_in_s3_filename
 
     mysql_cursor.execute(f'SELECT {column_name} as first_value FROM {archive_db_name}.{archive_table_name} ORDER BY {column_name} LIMIT 1')
     first_value = mysql_cursor.fetchone()['first_value']

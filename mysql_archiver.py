@@ -15,7 +15,7 @@ def start_archival():
 def archive(archive_config, db_name, transaction_size):
     table_name = archive_config.get('table')
     where_clause = archive_config.get('where')
-    column_to_append_to_filename = archive_config.get('column_to_append_to_filename')
+    column_to_add_in_s3_filename = archive_config.get('column_to_add_in_s3_filename')
 
     archive_db_name = db_name + '_archive'
     archive_table_name = table_name + '_archive'
@@ -30,7 +30,7 @@ def archive(archive_config, db_name, transaction_size):
         else:
             raise e
 
-    local_file_name, s3_path = db_utils.get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_append_to_filename, where_clause)
+    local_file_name, s3_path = db_utils.get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_add_in_s3_filename, where_clause)
 
     archive_utils.archive_to_db(db_name, table_name, archive_db_name, archive_table_name, where_clause, transaction_size)
     archive_utils.archive_to_file(db_name, table_name, archive_db_name, archive_table_name, where_clause, transaction_size, local_file_name)

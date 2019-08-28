@@ -14,6 +14,9 @@ s3_config:
     bucket_name: 'test_bucket_name'
 
 archive:
-    - table: my_test_table
+    - table: my_test_table_1
       where: id<100
-      column_to_append_to_filename: id
+      column_to_add_in_s3_filename: id
+    - table: my_test_table_2
+      where: id<100
+      column_to_add_in_s3_filename: id
