@@ -4,6 +4,7 @@ from db_utils import mysql_connection
 
 db_to_db_archive_command = """
 pt-archiver \
+  --config pt-archiver-base.conf \
   --source D={db_name},t={table_name} \
   --dest D={archive_db_name},t={archive_table_name} \
   --where "{where_clause}" \
@@ -15,6 +16,7 @@ pt-archiver \
 
 db_to_file_archive_command = """
 pt-archiver \
+  --config pt-archiver-base.conf \
   --source D={archive_db_name},t={archive_table_name} \
   --where "true" \
   --no-delete \
