@@ -9,9 +9,9 @@ database_config:
     transaction_size: 1000
 
 s3_config:
-    s3_access_key: 'test_access_key'
-    s3_secret_key: 'test_secret_key'
-    bucket_name: 'test_bucket_name'
+    s3_access_key: test_access_key
+    s3_secret_key: test_secret_key
+    bucket_name: test_bucket_name
 
 archive:
     - table: my_test_table_1
