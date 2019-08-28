@@ -1,5 +1,12 @@
 from config_loader import s3_config
 from botocore.exceptions import ClientError
+import boto3
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=s3_config.get('s3_access_key'),
+    aws_secret_access_key=s3_config.get('s3_secret_key')
+)
 
 
 def upload_to_s3(local_file, s3_path):
