@@ -1,5 +1,5 @@
 from config_loader import archive_configs, database_config
-from sqlalchemy.exc import OperationalError
+from mysql.connector.errors import ProgrammingError
 import db_utils
 import archive_utils
 import s3_utils
@@ -23,12 +23,13 @@ def archive(archive_config, db_name, transaction_size):
     db_utils.create_archive_database(db_name, archive_db_name)
     try:
         db_utils.create_archive_table(db_name, table_name, archive_db_name, archive_table_name)
-    except OperationalError as e:
-        from pprint import pprint
-        pprint(e.errno)
-        # pprint(vars(e))
-        import sys
-        sys.exit()
+    except ProgrammingError as e:
+        if e.errno == 1050:
+            # ToDo: archive the table, upload to s3, drop archive table, start with creating archive table again
+            pass
+        else:
+            raise e
+
     local_file_name, s3_path = db_utils.get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_append_to_filename, where_clause)
 
     archive_utils.archive_to_db(db_name, table_name, archive_db_name, archive_table_name, where_clause, transaction_size)
