@@ -54,6 +54,12 @@ def drop_archive_table(archive_db_name, archive_table_name):
     mysql_cursor.execute(f'DROP TABLE {archive_table_name}')
 
 
+def get_count_of_rows_archived(archive_db_name, archive_table_name):
+    mysql_cursor.execute(f'SELECT count(*) as count FROM {archive_db_name}.{archive_table_name}')
+
+    return mysql_cursor.fetchone()['count']
+
+
 def get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_add_in_s3_filename, where_clause):
     column_name = column_to_add_in_s3_filename
 

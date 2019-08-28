@@ -1,6 +1,4 @@
 import subprocess
-from db_utils import mysql_connection
-
 
 db_to_db_archive_command = """
 pt-archiver \
