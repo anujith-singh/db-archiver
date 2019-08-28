@@ -3,28 +3,28 @@ import logging
 
 db_to_db_archive_command = """
 pt-archiver \
-  --config pt-archiver-base.conf \
-  --source D={db_name},t={table_name} \
-  --dest D={archive_db_name},t={archive_table_name} \
-  --where "{where_clause}" \
-  --limit {transaction_size} \
-  --txn-size {transaction_size} \
-  --bulk-delete \
-  --no-check-charset
+    --config pt-archiver-base.conf \
+    --source D={db_name},t={table_name} \
+    --dest D={archive_db_name},t={archive_table_name} \
+    --where "{where_clause}" \
+    --limit {transaction_size} \
+    --txn-size {transaction_size} \
+    --bulk-delete \
+    --no-check-charset
 """
 
 db_to_file_archive_command = """
 pt-archiver \
-  --config pt-archiver-base.conf \
-  --source D={archive_db_name},t={archive_table_name} \
-  --where "true" \
-  --no-delete \
-  --limit={transaction_size} \
-  --header \
-  --file="{archive_file_name}" \
-  --output-format=csv \
-  --no-safe-auto-increment \
-  --no-check-charset
+    --config pt-archiver-base.conf \
+    --source D={archive_db_name},t={archive_table_name} \
+    --where "true" \
+    --no-delete \
+    --limit={transaction_size} \
+    --header \
+    --file="{archive_file_name}" \
+    --output-format=csv \
+    --no-safe-auto-increment \
+    --no-check-charset
 """
 
 
