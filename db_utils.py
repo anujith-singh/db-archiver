@@ -1,7 +1,5 @@
-# import mysql.connector
-# from mysql.connector import Error
-
-from sqlalchemy import create_engine
+import mysql.connector
+from mysql.connector import Error
 from config_loader import database_config
 import re
 
@@ -12,26 +10,21 @@ db_user = database_config.get('user')
 db_password = database_config.get('password')
 db_host = database_config.get('host')
 
-mysql_connection_string = MYSQL_CONNECTION_STRING.format(
-    user=db_user, password=db_password, host=db_host
-)
-mysql_engine = create_engine(mysql_connection_string)
-mysql_connection = mysql_engine.connect()
-# mysql_connection = mysql.connector.connect(host=db_host, user=db_user, password=db_password)
-# mysql_cursor = mysql_connection.cursor()
+mysql_connection = mysql.connector.connect(host=db_host, user=db_user, password=db_password)
+mysql_cursor = mysql_connection.cursor(dictionary=True)
 
 
 def create_archive_database(db_name, archive_db_name):
-    results = mysql_connection.execute(f'SHOW CREATE DATABASE {db_name}')
-    create_db_query = results.fetchone()['Create Database']
+    mysql_cursor.execute(f'SHOW CREATE DATABASE {db_name}')
+    create_db_query = mysql_cursor.fetchone()['Create Database']
     create_archive_db_query = re.sub(r'(?s)(CREATE DATABASE )(`.*?)(`)', r'\1IF NOT EXISTS `' + archive_db_name + '`', create_db_query, count=1)
-    mysql_connection.execute(create_archive_db_query)
+    mysql_cursor.execute(create_archive_db_query)
 
 
 def create_archive_table(db_name, table_name, archive_db_name, archive_table_name):
-    mysql_connection.execute(f'USE {db_name}')
-    results = mysql_connection.execute(f'SHOW CREATE TABLE {table_name}')
-    create_table_query = results.fetchone()['Create Table']
+    mysql_cursor.execute(f'USE {db_name}')
+    mysql_cursor.execute(f'SHOW CREATE TABLE {table_name}')
+    create_table_query = mysql_cursor.fetchone()['Create Table']
 
     create_archive_table_query_list = []
     # create_archive_table_query_str = ''
@@ -52,24 +45,24 @@ def create_archive_table(db_name, table_name, archive_db_name, archive_table_nam
     create_archive_table_query_list[remove_comma_line_no] = remove_comma_line
     create_archive_table_query = ' '.join(create_archive_table_query_list)
 
-    mysql_connection.execute(f'USE {archive_db_name}')
-    mysql_connection.execute(create_archive_table_query)
+    mysql_cursor.execute(f'USE {archive_db_name}')
+    mysql_cursor.execute(create_archive_table_query)
 
 
 def drop_archive_table(archive_db_name, archive_table_name):
-    mysql_connection.execute(f'USE {archive_db_name}')
-    mysql_connection.execute(f'DROP TABLE {archive_table_name}')
+    mysql_cursor.execute(f'USE {archive_db_name}')
+    mysql_cursor.execute(f'DROP TABLE {archive_table_name}')
 
 
 def get_file_names(db_name, table_name, archive_db_name, archive_table_name, column_to_append_to_filename, where_clause):
     column_name = column_to_append_to_filename
 
-    results = mysql_connection.execute(f'SELECT {column_name} as first_value FROM {archive_db_name}.{archive_table_name} ORDER BY {column_name} LIMIT 1')
-    first_value = results.fetchone()['first_value']
+    mysql_cursor.execute(f'SELECT {column_name} as first_value FROM {archive_db_name}.{archive_table_name} ORDER BY {column_name} LIMIT 1')
+    first_value = mysql_cursor.fetchone()['first_value']
     first_value = str(first_value)
 
-    results = mysql_connection.execute(f'SELECT {column_name} as last_value FROM {archive_db_name}.{archive_table_name} ORDER BY {column_name} DESC LIMIT 1')
-    last_value = results.fetchone()['last_value']
+    mysql_cursor.execute(f'SELECT {column_name} as last_value FROM {archive_db_name}.{archive_table_name} ORDER BY {column_name} DESC LIMIT 1')
+    last_value = mysql_cursor.fetchone()['last_value']
     last_value = str(last_value)
 
     data_part_name = 'from_(' + first_value + ')_to_(' + last_value + ')'
