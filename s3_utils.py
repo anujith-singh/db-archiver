@@ -1,6 +1,7 @@
 from config_loader import s3_config
 from botocore.exceptions import ClientError
 import boto3
+import logging
 
 s3_client = boto3.client(
     's3',
@@ -12,6 +13,8 @@ s3_client = boto3.client(
 def upload_to_s3(local_file, s3_path):
     bucket_name = s3_config.get('bucket_name')
     s3_path = get_usable_s3_path(bucket_name, s3_path)
+    logging.info('Uploading file to s3')
+    logging.info(f'{local_file} -> {s3_path}')
     s3_client.upload_fileobj(
         open(local_file, 'rb'),
         bucket_name,

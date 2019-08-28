@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 from config_loader import database_config
 import re
+import logging
 
 
 MYSQL_CONNECTION_STRING = 'mysql://{user}:{password}@{host}'
@@ -23,6 +24,7 @@ def create_archive_database(db_name, archive_db_name):
         create_db_query = mysql_cursor.fetchone()['Create Database']
         create_archive_db_query = re.sub(r'(?s)(CREATE DATABASE )(`.*?)(`)', r'\1IF NOT EXISTS `' + archive_db_name + '`', create_db_query, count=1)
         mysql_cursor.execute(create_archive_db_query)
+        logging.info(f'Created archive database {archive_db_name}')
 
 
 def create_archive_table(db_name, table_name, archive_db_name, archive_table_name):
@@ -31,16 +33,13 @@ def create_archive_table(db_name, table_name, archive_db_name, archive_table_nam
     create_table_query = mysql_cursor.fetchone()['Create Table']
 
     create_archive_table_query_list = []
-    # create_archive_table_query_str = ''
     for line in create_table_query.splitlines():
         if 'CREATE TABLE' in line:
             # replacing table_name with table_name_archive in CREATE TABLE query
             create_archive_table_query_list.append(re.sub(r'(?s)(CREATE TABLE )(`.*?)(`)', r'\1`' + archive_table_name + '`', line, count=1))
-            # create_archive_table_query_str += re.sub(r'(?s)(CREATE TABLE )(`.*?)(`)', r'\1`' + archive_table_name + '`', line, count=1)
             continue
         if not re.search('CONSTRAINT(.*)FOREIGN KEY(.*)REFERENCES', line):
             create_archive_table_query_list.append(line)
-            # create_archive_table_query_str += line
 
     line_count = len(create_archive_table_query_list)
     remove_comma_line_no = line_count - 2
@@ -51,11 +50,13 @@ def create_archive_table(db_name, table_name, archive_db_name, archive_table_nam
 
     mysql_cursor.execute(f'USE {archive_db_name}')
     mysql_cursor.execute(create_archive_table_query)
+    logging.info(f'Created archive table {archive_db_name}.{archive_table_name}')
 
 
 def drop_archive_table(archive_db_name, archive_table_name):
     mysql_cursor.execute(f'USE {archive_db_name}')
     mysql_cursor.execute(f'DROP TABLE {archive_table_name}')
+    logging.info(f'Dropped archive table {archive_db_name}.{archive_db_name}')
 
 
 def get_count_of_rows_archived(archive_db_name, archive_table_name):

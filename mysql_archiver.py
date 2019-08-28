@@ -4,9 +4,13 @@ import db_utils
 import archive_utils
 import s3_utils
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 def start_archival():
+    logging.info('Starting archive...')
     for archive_config in archive_configs:
         db_name = database_config.get('database')
         transaction_size = database_config.get('transaction_size')
@@ -15,6 +19,7 @@ def start_archival():
 
 def archive(archive_config, db_name, transaction_size):
     table_name = archive_config.get('table')
+    logging.info(f'\n\n------------- archiving {db_name}.{table_name} -------------')
     where_clause = archive_config.get('where')
     column_to_add_in_s3_filename = archive_config.get('column_to_add_in_s3_filename')
 
@@ -36,6 +41,7 @@ def archive(archive_config, db_name, transaction_size):
 
     no_of_rows_archived = db_utils.get_count_of_rows_archived(archive_db_name, archive_table_name)
     if not no_of_rows_archived:
+        logging.info(f'Archive table {archive_db_name}.{archive_table_name} had no rows, dropping archive table')
         db_utils.drop_archive_table(archive_db_name, archive_table_name)
 
         return
@@ -44,6 +50,7 @@ def archive(archive_config, db_name, transaction_size):
     archive_utils.archive_to_file(db_name, table_name, archive_db_name, archive_table_name, where_clause, transaction_size, local_file_name)
 
     s3_utils.upload_to_s3(local_file_name, s3_path)
+    logging.info(f'Deleting local file: {local_file_name}')
     os.remove(local_file_name)
 
     db_utils.drop_archive_table(archive_db_name, archive_table_name)
