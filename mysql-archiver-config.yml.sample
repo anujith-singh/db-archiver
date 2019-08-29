@@ -8,6 +8,8 @@ database_config:
     # --limit and --txn-size are both passed same value
     transaction_size: 1000
 
+sentry_dsn: ~
+
 s3_config:
     s3_access_key: test_access_key
     s3_secret_key: test_secret_key

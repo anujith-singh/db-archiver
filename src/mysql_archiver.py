@@ -1,10 +1,11 @@
 import logging
 import os
+import sentry_sdk
 
 import archive_utils
 import db_utils
 import s3_utils
-from config_loader import archive_configs, database_config
+from config_loader import archive_configs, database_config, sentry_dsn
 from mysql.connector.errors import ProgrammingError
 
 logging.basicConfig(level=logging.INFO)
@@ -71,4 +72,10 @@ def archive(archive_config, db_name, transaction_size):
 
 
 if __name__ == '__main__':
-    start_archival()
+    sentry_sdk.init(dsn=sentry_dsn)
+    try:
+        start_archival()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+
+        raise e
