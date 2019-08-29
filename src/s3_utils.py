@@ -1,7 +1,8 @@
-from config_loader import s3_config
-from botocore.exceptions import ClientError
-import boto3
 import logging
+
+import boto3
+from botocore.exceptions import ClientError
+from config_loader import s3_config
 
 s3_client = boto3.client(
     's3',

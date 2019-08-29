@@ -1,9 +1,8 @@
-import mysql.connector
-from mysql.connector import Error
-from config_loader import database_config
-import re
 import logging
+import re
 
+import mysql.connector
+from config_loader import database_config
 
 MYSQL_CONNECTION_STRING = 'mysql://{user}:{password}@{host}'
 

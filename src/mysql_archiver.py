@@ -1,10 +1,11 @@
+import logging
+import os
+
+import archive_utils
+import db_utils
+import s3_utils
 from config_loader import archive_configs, database_config
 from mysql.connector.errors import ProgrammingError
-import db_utils
-import archive_utils
-import s3_utils
-import os
-import logging
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,5 +1,5 @@
-import subprocess
 import logging
+import subprocess
 
 db_to_db_archive_command = """
 pt-archiver \
