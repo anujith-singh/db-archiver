@@ -1,0 +1,3 @@
+PyYAML
+mysql-connector-python
+boto3
