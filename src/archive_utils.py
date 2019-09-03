@@ -45,8 +45,8 @@ def archive_to_db(db_name, table_name, archive_db_name, archive_table_name,
     subprocess.run(archive_command, shell=True, check=True)
 
 
-def archive_to_file(db_name, table_name, archive_db_name, archive_table_name,
-                    where_clause, transaction_size, local_file_name):
+def archive_to_file(archive_db_name, archive_table_name, transaction_size,
+                    local_file_name):
     archive_command = db_to_file_archive_command.format(
         archive_db_name=archive_db_name,
         archive_table_name=archive_table_name,

@@ -8,7 +8,10 @@ import s3_utils
 from config_loader import archive_configs, database_config, sentry_dsn
 from mysql.connector.errors import ProgrammingError
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s'
+)
 
 
 def start_archival():
@@ -36,9 +39,17 @@ def archive(archive_config, db_name, transaction_size):
             db_name, table_name, archive_db_name, archive_table_name)
     except ProgrammingError as e:
         if e.errno == 1050:
-            # ToDo: archive the table, upload to s3, drop archive table,
-            # start with creating archive table again
-            pass
+            logging.info(
+                f'Archive table {archive_db_name}.{archive_table_name} exists,'
+                f' archiving older rows'
+            )
+
+            fetch_archived_data_upload_to_s3_and_delete(
+                db_name, table_name, archive_db_name, archive_table_name,
+                column_in_file_name, '')
+            archive(archive_config, db_name, transaction_size)
+
+            return None
         else:
             raise e
 
@@ -46,6 +57,14 @@ def archive(archive_config, db_name, transaction_size):
         db_name, table_name, archive_db_name, archive_table_name, where_clause,
         transaction_size)
 
+    fetch_archived_data_upload_to_s3_and_delete(
+        db_name, table_name, archive_db_name, archive_table_name,
+        column_in_file_name, where_clause)
+
+
+def fetch_archived_data_upload_to_s3_and_delete(
+    db_name, table_name, archive_db_name, archive_table_name,
+    column_in_file_name, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
     if not no_of_rows_archived:
@@ -54,21 +73,22 @@ def archive(archive_config, db_name, transaction_size):
             f'had no rows, dropping archive table')
         db_utils.drop_archive_table(archive_db_name, archive_table_name)
 
-        return
+        return None
 
     local_file_name, s3_path = db_utils.get_file_names(
         db_name, table_name, archive_db_name, archive_table_name,
         column_in_file_name, where_clause)
 
     archive_utils.archive_to_file(
-        db_name, table_name, archive_db_name, archive_table_name, where_clause,
-        transaction_size, local_file_name)
+        archive_db_name, archive_table_name, transaction_size, local_file_name)
 
     s3_utils.upload_to_s3(local_file_name, s3_path)
     logging.info(f'Deleting local file: {local_file_name}')
     os.remove(local_file_name)
 
     db_utils.drop_archive_table(archive_db_name, archive_table_name)
+
+    return None
 
 
 if __name__ == '__main__':
