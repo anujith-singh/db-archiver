@@ -109,9 +109,8 @@ def get_file_names(db_name, table_name, archive_db_name, archive_table_name,
     last_value = mysql_cursor.fetchone()['last_value']
     last_value = str(last_value)
 
-    data_part_name = 'from_(' + first_value + ')_to_(' + last_value + ')'
-    s3_path = db_name + '/' + table_name + '/' + \
-        data_part_name + '_where_(' + where_clause + ').csv'
-    local_file_name = table_name + '_' + data_part_name + '.csv'
+    data_part_name = f'({column_name})from_({first_value})_to_({last_value})'
+    s3_path = f'{db_name}/{table_name}/{data_part_name}_where_({where_clause}).csv'
+    local_file_name = f'{table_name}_{data_part_name}.csv'
 
     return local_file_name, s3_path
