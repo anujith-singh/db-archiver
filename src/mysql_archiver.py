@@ -1,3 +1,4 @@
+import gzip
 import logging
 import os
 import sentry_sdk
@@ -82,13 +83,27 @@ def fetch_archived_data_upload_to_s3_and_delete(
     archive_utils.archive_to_file(
         archive_db_name, archive_table_name, transaction_size, local_file_name)
 
-    s3_utils.upload_to_s3(local_file_name, s3_path)
+    gzip_file_name = compress_to_gzip(local_file_name)
+    gzip_s3_path = f'{s3_path}.gz'
+
+    # s3_utils.upload_to_s3(local_file_name, s3_path)
+    s3_utils.upload_to_s3(gzip_file_name, gzip_s3_path)
     logging.info(f'Deleting local file: {local_file_name}')
     os.remove(local_file_name)
+    os.remove(gzip_file_name)
 
     db_utils.drop_archive_table(archive_db_name, archive_table_name)
 
     return None
+
+
+def compress_to_gzip(local_file_name):
+    gzip_file_name = f'{local_file_name}.gz'
+    fp = open(local_file_name,'rb')
+    with gzip.open(gzip_file_name, 'wb') as gz_fp:
+        gz_fp.write(bytearray(fp.read()))
+
+    return gzip_file_name
 
 
 if __name__ == '__main__':
