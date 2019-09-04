@@ -46,7 +46,7 @@ def archive(archive_config, db_name, transaction_size):
 
             fetch_archived_data_upload_to_s3_and_delete(
                 db_name, table_name, archive_db_name, archive_table_name,
-                column_in_file_name, '')
+                column_in_file_name, transaction_size, '')
             archive(archive_config, db_name, transaction_size)
 
             return None
@@ -59,12 +59,12 @@ def archive(archive_config, db_name, transaction_size):
 
     fetch_archived_data_upload_to_s3_and_delete(
         db_name, table_name, archive_db_name, archive_table_name,
-        column_in_file_name, where_clause)
+        column_in_file_name, transaction_size, where_clause)
 
 
 def fetch_archived_data_upload_to_s3_and_delete(
     db_name, table_name, archive_db_name, archive_table_name,
-    column_in_file_name, where_clause):
+    column_in_file_name, transaction_size, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
     if not no_of_rows_archived:
