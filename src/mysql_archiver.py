@@ -1,3 +1,4 @@
+import argparse
 import gzip
 import logging
 import os
@@ -6,7 +7,7 @@ import sentry_sdk
 import archive_utils
 import db_utils
 import s3_utils
-from config_loader import archive_configs, database_config, sentry_dsn
+from config_loader import database_config, sentry_dsn
 from mysql.connector.errors import ProgrammingError
 
 logging.basicConfig(
@@ -16,19 +17,52 @@ logging.basicConfig(
 
 
 def start_archival():
+    parser = argparse.ArgumentParser(description='MySQL DB Archiver')
+
+    parser.add_argument(
+        '--table',
+        '-t',
+        dest='table',
+        type=str,
+        required=True,
+        help='Table to be archived')
+
+    parser.add_argument(
+        '--where',
+        '-w',
+        dest='where',
+        type=str,
+        required=True,
+        help='Where clause for archiving table, this will also be appended to archive file name')
+
+    parser.add_argument(
+        '--column_name_to_log',
+        '-c',
+        dest='column_name_to_log',
+        required=True,
+        help='Smallest and largest values from this column will be part of the archiver file name')
+
+    args = parser.parse_args()
+    table_name = args.table
+    where_clause = args.where
+    column_name_to_log_in_file = args.column_name_to_log
+
+    if not table_name or not where_clause or not column_name_to_log_in_file:
+        raise ValueError(
+            f'table: {table_name} | where: {where_clause} | column_name_to_log: {column_name_to_log_in_file},'
+            f' These are mandatory values.'
+        )
+
+    db_name = database_config.get('database')
+    transaction_size = database_config.get('transaction_size')
     logging.info('Starting archive...')
-    for archive_config in archive_configs:
-        db_name = database_config.get('database')
-        transaction_size = database_config.get('transaction_size')
-        archive(archive_config, db_name, transaction_size)
+    archive(db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size)
 
 
-def archive(archive_config, db_name, transaction_size):
-    table_name = archive_config.get('table')
+def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
+            transaction_size):
     logging.info(
         f'\n\n------------- archiving {db_name}.{table_name} -------------')
-    where_clause = archive_config.get('where')
-    column_in_file_name = archive_config.get('column_to_add_in_s3_filename')
 
     archive_db_name = db_name + '_archive'
     archive_table_name = table_name + '_archive'
@@ -47,8 +81,10 @@ def archive(archive_config, db_name, transaction_size):
 
             fetch_archived_data_upload_to_s3_and_delete(
                 db_name, table_name, archive_db_name, archive_table_name,
-                column_in_file_name, transaction_size, '')
-            archive(archive_config, db_name, transaction_size)
+                column_name_to_log_in_file, transaction_size, '')
+
+            archive(db_name, table_name, where_clause,
+                    column_name_to_log_in_file, transaction_size)
 
             return None
         else:
@@ -60,12 +96,12 @@ def archive(archive_config, db_name, transaction_size):
 
     fetch_archived_data_upload_to_s3_and_delete(
         db_name, table_name, archive_db_name, archive_table_name,
-        column_in_file_name, transaction_size, where_clause)
+        column_name_to_log_in_file, transaction_size, where_clause)
 
 
 def fetch_archived_data_upload_to_s3_and_delete(
     db_name, table_name, archive_db_name, archive_table_name,
-    column_in_file_name, transaction_size, where_clause):
+    column_name_to_log_in_file, transaction_size, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
     if not no_of_rows_archived:
@@ -78,7 +114,7 @@ def fetch_archived_data_upload_to_s3_and_delete(
 
     local_file_name, s3_path = db_utils.get_file_names(
         db_name, table_name, archive_db_name, archive_table_name,
-        column_in_file_name, where_clause)
+        column_name_to_log_in_file, where_clause)
 
     archive_utils.archive_to_file(
         archive_db_name, archive_table_name, transaction_size, local_file_name)

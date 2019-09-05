@@ -4,7 +4,6 @@ import yaml
 with open('mysql-archiver-config.yml', 'r') as stream:
     config = yaml.safe_load(stream)
     database_config = config.get('database_config')
-    archive_configs = config.get('archive')
     s3_config = config.get('s3_config')
     sentry_dsn = config.get('sentry_dsn')
 

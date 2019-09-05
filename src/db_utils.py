@@ -88,8 +88,7 @@ def get_count_of_rows_archived(archive_db_name, archive_table_name):
 
 
 def get_file_names(db_name, table_name, archive_db_name, archive_table_name,
-                   column_to_add_in_s3_filename, where_clause):
-    column_name = column_to_add_in_s3_filename
+                   column_name, where_clause):
 
     mysql_cursor.execute(
         f'SELECT {column_name} as first_value '

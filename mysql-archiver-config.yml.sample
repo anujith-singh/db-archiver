@@ -14,11 +14,3 @@ s3_config:
     s3_access_key: test_access_key
     s3_secret_key: test_secret_key
     bucket_name: test_bucket_name
-
-archive:
-    - table: my_test_table_1
-      where: id<100
-      column_to_add_in_s3_filename: id
-    - table: my_test_table_2
-      where: id<100
-      column_to_add_in_s3_filename: id
