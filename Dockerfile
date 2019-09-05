@@ -19,9 +19,11 @@ RUN rm -rf /var/lib/apt/lists/*
 
 ENV APP_DIR /app
 WORKDIR ${APP_DIR}
-COPY . ${APP_DIR}
+COPY requirements.lock ${APP_DIR}/
 
 RUN pip install -r requirements.lock
+
+COPY . ${APP_DIR}
 
 # Provide execute access
 RUN chmod +x /app/docker-entrypoint.sh
