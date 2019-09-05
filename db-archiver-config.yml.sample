@@ -1,4 +1,4 @@
-# This is a template, copy the contents of this file to mysql-archiver-config.yml
+# This is a template, copy the contents of this file to db-archiver-config.yml
 database_config:
     host: mysql-5.6
     user: mysql_user

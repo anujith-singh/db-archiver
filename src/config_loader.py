@@ -1,7 +1,7 @@
 import yaml
 
 
-with open('mysql-archiver-config.yml', 'r') as stream:
+with open('db-archiver-config.yml', 'r') as stream:
     config = yaml.safe_load(stream)
     database_config = config.get('database_config')
     s3_config = config.get('s3_config')
