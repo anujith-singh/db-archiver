@@ -56,7 +56,8 @@ def create_archive_table(db_name, table_name, archive_db_name,
                 )
             )
             continue
-        if not re.search('CONSTRAINT(.*)FOREIGN KEY(.*)REFERENCES', line):
+        if not re.search('CONSTRAINT(.*)FOREIGN KEY(.*)REFERENCES', line) \
+            and not re.search('PRIMARY KEY(.*)', line):
             create_archive_table_query_list.append(line)
 
     line_count = len(create_archive_table_query_list)
