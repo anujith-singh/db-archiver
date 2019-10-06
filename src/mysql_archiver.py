@@ -42,10 +42,13 @@ def start_archival():
         required=True,
         help='Smallest and largest values from this column will be part of the archiver file name')
 
+    parser.add_argument('--optimize', dest='optimize', action='store_true')
+
     args = parser.parse_args()
     table_name = args.table
     where_clause = args.where
     column_name_to_log_in_file = args.column_name_to_log
+    optimize = args.optimize
 
     if not table_name or not where_clause or not column_name_to_log_in_file:
         raise ValueError(
@@ -56,11 +59,11 @@ def start_archival():
     db_name = database_config.get('database')
     transaction_size = database_config.get('transaction_size')
     logging.info('Starting archive...')
-    archive(db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size)
+    archive(db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size, optimize)
 
 
 def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
-            transaction_size):
+            transaction_size, optimize):
     logging.info(
         f'\n\n------------- archiving {db_name}.{table_name} -------------')
 
@@ -84,7 +87,7 @@ def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
                 column_name_to_log_in_file, transaction_size, '')
 
             archive(db_name, table_name, where_clause,
-                    column_name_to_log_in_file, transaction_size)
+                    column_name_to_log_in_file, transaction_size, optimize)
 
             return None
         else:
@@ -92,7 +95,7 @@ def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
 
     archive_utils.archive_to_db(
         db_name, table_name, archive_db_name, archive_table_name, where_clause,
-        transaction_size)
+        transaction_size, optimize)
 
     fetch_archived_data_upload_to_s3_and_delete(
         db_name, table_name, archive_db_name, archive_table_name,

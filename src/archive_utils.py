@@ -10,7 +10,8 @@ pt-archiver \
     --limit {transaction_size} \
     --txn-size {transaction_size} \
     --bulk-delete \
-    --no-check-charset
+    --no-check-charset \
+    {optimize_str}
 """
 
 db_to_file_archive_command = """
@@ -29,14 +30,18 @@ pt-archiver \
 
 
 def archive_to_db(db_name, table_name, archive_db_name, archive_table_name,
-                  where_clause, transaction_size):
+                  where_clause, transaction_size, optimize):
+    optimize_str = ''
+    if optimize == True:
+        optimize_str = ' --optimize=s'
     archive_command = db_to_db_archive_command.format(
         db_name=db_name,
         table_name=table_name,
         archive_db_name=archive_db_name,
         archive_table_name=archive_table_name,
         where_clause=where_clause,
-        transaction_size=transaction_size
+        transaction_size=transaction_size,
+        optimize_str=optimize_str
     )
     logging.info('Archiving from DB to archive DB')
     logging.info(
