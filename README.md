@@ -6,7 +6,7 @@
 
 
 ##### Example usage:
-```python src/mysql_archiver.py --table my_table_name --where "created < now() - interval 6 month" --column_name_to_log id```
+```python src/db_archiver.py --table my_table_name --where "created < now() - interval 6 month" --column_name_to_log id```
 
 
 ##### To create a mysql user with privileges just enough for this tool
