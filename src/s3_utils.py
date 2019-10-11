@@ -15,6 +15,8 @@ s3_client = boto3.client(
 def upload_to_s3(local_file, s3_path):
     bucket_name = s3_config.get('bucket_name')
     s3_path = get_usable_s3_path(bucket_name, s3_path)
+    logging.info('')
+    logging.info('')
     logging.info('Uploading file to s3')
     logging.info(f'{local_file} -> {s3_path}')
     s3_client.upload_fileobj(

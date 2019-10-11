@@ -76,6 +76,8 @@ def create_archive_table(db_name, table_name, archive_db_name,
 def drop_archive_table(archive_db_name, archive_table_name):
     mysql_cursor.execute(f'USE {archive_db_name}')
     mysql_cursor.execute(f'DROP TABLE {archive_table_name}')
+    logging.info('')
+    logging.info('')
     logging.info(f'Dropped archive table {archive_db_name}.{archive_table_name}')
 
 

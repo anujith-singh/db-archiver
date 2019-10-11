@@ -64,8 +64,9 @@ def start_archival():
 
 def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
             transaction_size, optimize):
-    logging.info(
-        f'\n\n------------- archiving {db_name}.{table_name} -------------')
+    logging.info('')
+    logging.info('')
+    logging.info(f'------------- archiving {db_name}.{table_name} -------------')
 
     archive_db_name = db_name + '_archive'
     archive_table_name = table_name + '_archive'
