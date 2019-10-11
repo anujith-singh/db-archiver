@@ -44,11 +44,13 @@ def archive_to_db(db_name, table_name, archive_db_name, archive_table_name,
         optimize_str=optimize_str
     )
     archive_command = ' '.join(archive_command.split())
+
     logging.info('')
     logging.info('')
     logging.info('Archiving from DB to archive DB')
     logging.info(f'Executing: {archive_command}')
-    subprocess.run(archive_command, shell=True, check=True)
+
+    execute_shell_command(archive_command)
 
 
 def archive_to_file(archive_db_name, archive_table_name, transaction_size,
@@ -60,8 +62,18 @@ def archive_to_file(archive_db_name, archive_table_name, transaction_size,
         archive_file_name=local_file_name
     )
     archive_command = ' '.join(archive_command.split())
+
     logging.info('')
     logging.info('')
     logging.info('Archiving from archive DB to file')
     logging.info(f'Executing: {archive_command}')
-    subprocess.run(archive_command, shell=True, check=True)
+
+    execute_shell_command(archive_command)
+
+
+def execute_shell_command(archive_command):
+    result = subprocess.run(archive_command, shell=True, stderr=subprocess.PIPE)
+
+    if result.returncode != 0:
+        exception_msg = f"Return code: {result.returncode}, Error: {result.stderr.decode('utf-8')}"
+        raise Exception(exception_msg)
