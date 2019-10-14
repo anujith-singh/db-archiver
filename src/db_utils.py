@@ -55,9 +55,12 @@ def create_archive_table(db_name, table_name, archive_db_name,
                     count=1
                 )
             )
-            continue
-        if not re.search('CONSTRAINT(.*)FOREIGN KEY(.*)REFERENCES', line) \
-            and not re.search('PRIMARY KEY(.*)', line):
+        elif 'PRIMARY KEY' in line:
+            result = re.search('PRIMARY KEY \((.*)\),', line)
+            primary_keys = result.group(1).split(',')
+            if not len(primary_keys) > 1:
+                create_archive_table_query_list.append(line)
+        elif not re.search('CONSTRAINT(.*)FOREIGN KEY(.*)REFERENCES', line):
             create_archive_table_query_list.append(line)
 
     line_count = len(create_archive_table_query_list)
