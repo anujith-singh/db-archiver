@@ -1,5 +1,5 @@
 __pycache__/
 venv/
 *.pyc
-config.yml
+db-archiver-config.yml
 pt-archiver-base.conf
