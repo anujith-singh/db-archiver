@@ -30,7 +30,7 @@ pt-archiver \
 
 
 def archive_to_db(host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
-                  where_clause, transaction_size, optimize):
+                  where_clause, transaction_size, optimize, index_hint):
     optimize_str = ''
     if optimize:
         optimize_str = ' --optimize=s'
@@ -40,6 +40,9 @@ def archive_to_db(host, archive_host, db_name, table_name, archive_db_name, arch
         db_name=db_name,
         table_name=table_name,
     )
+
+    if index_hint:
+        source_dsn = f'{source_dsn},i={index_hint}'
 
     archive_command = db_to_db_archive_command.format(
         source_dsn=source_dsn,
