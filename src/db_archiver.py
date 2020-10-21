@@ -42,12 +42,24 @@ def start_archival():
         required=True,
         help='Smallest and largest values from this column will be part of the archiver file name')
 
+    parser.add_argument(
+        '--index_hint',
+        '-i',
+        dest='index_hint',
+        required=False,
+        help="From pt-archiver doc: The 'i' part deserves special mention. This tells pt-archiver which index it "
+             "should scan to archive. This appears in a FORCE INDEX or USE INDEX hint in the SELECT statements used "
+             "to fetch achievable rows. If you don't specify anything, pt-archiver will auto-discover a good index, "
+             "preferring a PRIMARY KEY if one exists. In my experience this usually works well, so most of the time "
+             "you can probably just omit the 'i' part.")
+
     parser.add_argument('--optimize', dest='optimize', action='store_true')
 
     args = parser.parse_args()
     table_name = args.table
     where_clause = args.where
     column_name_to_log_in_file = args.column_name_to_log
+    index_hint = args.index_hint
     optimize = args.optimize
 
     if not table_name or not where_clause or not column_name_to_log_in_file:
@@ -61,11 +73,12 @@ def start_archival():
     db_name = database_config.get('database')
     transaction_size = database_config.get('transaction_size')
     logging.info('Starting archive...')
-    archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size, optimize)
+    archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size,
+            optimize, index_hint)
 
 
 def archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file,
-            transaction_size, optimize):
+            transaction_size, optimize, index_hint):
     logging.info('')
     logging.info('')
     logging.info(f'------------- archiving {db_name}.{table_name} -------------')
@@ -89,16 +102,15 @@ def archive(host, archive_host, db_name, table_name, where_clause, column_name_t
                 host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
                 column_name_to_log_in_file, transaction_size, '')
 
-            archive(host, archive_host, db_name, table_name, where_clause,
-                    column_name_to_log_in_file, transaction_size, optimize)
+            archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size,
+                    optimize, index_hint)
 
             return None
         else:
             raise e
 
-    archive_utils.archive_to_db(
-        host, archive_host, db_name, table_name, archive_db_name, archive_table_name, where_clause,
-        transaction_size, optimize)
+    archive_utils.archive_to_db(host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
+                                where_clause, transaction_size, optimize, index_hint)
 
     fetch_archived_data_upload_to_s3_and_delete(
         host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
@@ -106,8 +118,8 @@ def archive(host, archive_host, db_name, table_name, where_clause, column_name_t
 
 
 def fetch_archived_data_upload_to_s3_and_delete(
-    host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
-    column_name_to_log_in_file, transaction_size, where_clause):
+        host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
+        column_name_to_log_in_file, transaction_size, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
     if not no_of_rows_archived:
@@ -141,7 +153,7 @@ def fetch_archived_data_upload_to_s3_and_delete(
 
 def compress_to_gzip(local_file_name):
     gzip_file_name = f'{local_file_name}.gz'
-    fp = open(local_file_name,'rb')
+    fp = open(local_file_name, 'rb')
     with gzip.open(gzip_file_name, 'wb') as gz_fp:
         gz_fp.write(bytearray(fp.read()))
 
