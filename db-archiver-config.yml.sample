@@ -1,6 +1,7 @@
 # This is a template, copy the contents of this file to db-archiver-config.yml
 database_config:
-    host: mysql-5.6
+    host: mysql_host
+    archive_host: mysql_archive_host
     user: mysql_user
     password: mysql_pass
     database: my_test_database
