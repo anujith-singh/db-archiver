@@ -56,13 +56,16 @@ def start_archival():
             f' These are mandatory values.'
         )
 
+    host = database_config.get('host')
+    archive_host = database_config.get('archive_host')
     db_name = database_config.get('database')
     transaction_size = database_config.get('transaction_size')
     logging.info('Starting archive...')
-    archive(db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size, optimize)
+    archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size,
+            optimize)
 
 
-def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
+def archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file,
             transaction_size, optimize):
     logging.info('')
     logging.info('')
@@ -76,36 +79,36 @@ def archive(db_name, table_name, where_clause, column_name_to_log_in_file,
     try:
         db_utils.create_archive_table(
             db_name, table_name, archive_db_name, archive_table_name)
-    except ProgrammingError as e:
-        if e.errno == 1050:
+    except ProgrammingError as er:
+        if er.errno == 1050:
             logging.info(
                 f'Archive table {archive_db_name}.{archive_table_name} exists,'
                 f' archiving older rows'
             )
 
             fetch_archived_data_upload_to_s3_and_delete(
-                db_name, table_name, archive_db_name, archive_table_name,
+                archive_host, db_name, table_name, archive_db_name, archive_table_name,
                 column_name_to_log_in_file, transaction_size, '')
 
-            archive(db_name, table_name, where_clause,
+            archive(host, archive_host, db_name, table_name, where_clause,
                     column_name_to_log_in_file, transaction_size, optimize)
 
             return None
         else:
-            raise e
+            raise er
 
     archive_utils.archive_to_db(
-        db_name, table_name, archive_db_name, archive_table_name, where_clause,
+        host, archive_host, db_name, table_name, archive_db_name, archive_table_name, where_clause,
         transaction_size, optimize)
 
     fetch_archived_data_upload_to_s3_and_delete(
-        db_name, table_name, archive_db_name, archive_table_name,
+        archive_host, db_name, table_name, archive_db_name, archive_table_name,
         column_name_to_log_in_file, transaction_size, where_clause)
 
 
 def fetch_archived_data_upload_to_s3_and_delete(
-    db_name, table_name, archive_db_name, archive_table_name,
-    column_name_to_log_in_file, transaction_size, where_clause):
+        archive_host, db_name, table_name, archive_db_name, archive_table_name,
+        column_name_to_log_in_file, transaction_size, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
     if not no_of_rows_archived:
@@ -121,7 +124,7 @@ def fetch_archived_data_upload_to_s3_and_delete(
         column_name_to_log_in_file, where_clause)
 
     archive_utils.archive_to_file(
-        archive_db_name, archive_table_name, transaction_size, local_file_name)
+        archive_host, archive_db_name, archive_table_name, transaction_size, local_file_name)
 
     gzip_file_name = compress_to_gzip(local_file_name)
     gzip_s3_path = f'{s3_path}.gz'
@@ -139,7 +142,7 @@ def fetch_archived_data_upload_to_s3_and_delete(
 
 def compress_to_gzip(local_file_name):
     gzip_file_name = f'{local_file_name}.gz'
-    fp = open(local_file_name,'rb')
+    fp = open(local_file_name, 'rb')
     with gzip.open(gzip_file_name, 'wb') as gz_fp:
         gz_fp.write(bytearray(fp.read()))
 

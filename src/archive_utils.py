@@ -4,8 +4,8 @@ import subprocess
 db_to_db_archive_command = """
 pt-archiver \
     --config pt-archiver-base.conf \
-    --source D={db_name},t={table_name} \
-    --dest D={archive_db_name},t={archive_table_name} \
+    --source {source_dsn} \
+    --dest h={archive_host},D={archive_db_name},t={archive_table_name} \
     --where "{where_clause}" \
     --limit {transaction_size} \
     --txn-size {transaction_size} \
@@ -17,7 +17,7 @@ pt-archiver \
 db_to_file_archive_command = """
 pt-archiver \
     --config pt-archiver-base.conf \
-    --source D={archive_db_name},t={archive_table_name} \
+    --source h={archive_host},D={archive_db_name},t={archive_table_name} \
     --where "true" \
     --no-delete \
     --limit={transaction_size} \
@@ -29,19 +29,26 @@ pt-archiver \
 """
 
 
-def archive_to_db(db_name, table_name, archive_db_name, archive_table_name,
+def archive_to_db(host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
                   where_clause, transaction_size, optimize):
     optimize_str = ''
-    if optimize == True:
+    if optimize:
         optimize_str = ' --optimize=s'
-    archive_command = db_to_db_archive_command.format(
+
+    source_dsn = 'h={host},D={db_name},t={table_name}'.format(
+        host=host,
         db_name=db_name,
         table_name=table_name,
+    )
+
+    archive_command = db_to_db_archive_command.format(
+        source_dsn=source_dsn,
         archive_db_name=archive_db_name,
         archive_table_name=archive_table_name,
         where_clause=where_clause,
         transaction_size=transaction_size,
-        optimize_str=optimize_str
+        optimize_str=optimize_str,
+        archive_host=archive_host
     )
     archive_command = ' '.join(archive_command.split())
 
@@ -53,13 +60,14 @@ def archive_to_db(db_name, table_name, archive_db_name, archive_table_name,
     execute_shell_command(archive_command)
 
 
-def archive_to_file(archive_db_name, archive_table_name, transaction_size,
+def archive_to_file(archive_host, archive_db_name, archive_table_name, transaction_size,
                     local_file_name):
     archive_command = db_to_file_archive_command.format(
         archive_db_name=archive_db_name,
         archive_table_name=archive_table_name,
         transaction_size=transaction_size,
-        archive_file_name=local_file_name
+        archive_file_name=local_file_name,
+        archive_host=archive_host
     )
     archive_command = ' '.join(archive_command.split())
 
