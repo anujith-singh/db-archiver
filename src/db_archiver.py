@@ -91,15 +91,15 @@ def archive(host, archive_host, db_name, table_name, where_clause, column_name_t
     try:
         db_utils.create_archive_table(
             db_name, table_name, archive_db_name, archive_table_name)
-    except ProgrammingError as e:
-        if e.errno == 1050:
+    except ProgrammingError as er:
+        if er.errno == 1050:
             logging.info(
                 f'Archive table {archive_db_name}.{archive_table_name} exists,'
                 f' archiving older rows'
             )
 
             fetch_archived_data_upload_to_s3_and_delete(
-                host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
+                archive_host, db_name, table_name, archive_db_name, archive_table_name,
                 column_name_to_log_in_file, transaction_size, '')
 
             archive(host, archive_host, db_name, table_name, where_clause, column_name_to_log_in_file, transaction_size,
@@ -107,18 +107,18 @@ def archive(host, archive_host, db_name, table_name, where_clause, column_name_t
 
             return None
         else:
-            raise e
+            raise er
 
     archive_utils.archive_to_db(host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
                                 where_clause, transaction_size, optimize, index_hint)
 
     fetch_archived_data_upload_to_s3_and_delete(
-        host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
+        archive_host, db_name, table_name, archive_db_name, archive_table_name,
         column_name_to_log_in_file, transaction_size, where_clause)
 
 
 def fetch_archived_data_upload_to_s3_and_delete(
-        host, archive_host, db_name, table_name, archive_db_name, archive_table_name,
+        archive_host, db_name, table_name, archive_db_name, archive_table_name,
         column_name_to_log_in_file, transaction_size, where_clause):
     no_of_rows_archived = db_utils.get_count_of_rows_archived(
         archive_db_name, archive_table_name)
